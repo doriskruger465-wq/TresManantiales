@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tres Manantiales · Administración de Campo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="stamp">3M</div>
+    <h1>Tres Manantiales</h1>
+    <div class="sub">Ingresá con tu usuario y contraseña</div>
+    <div class="login-error" id="loginError"></div>
+    <div class="field">
+      <label>Email</label>
+      <input id="loginEmail" type="email" placeholder="tu@email.com">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input id="loginPass" type="password" placeholder="••••••••">
+    </div>
+    <button class="btn primary" onclick="hacerLogin()">Ingresar</button>
+  </div>
+</div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="stamp">3M</div>
+      <div class="brand-text">
+        <div class="title">Tres Manantiales</div>
+        <div class="sub">Libro de Campo</div>
+      </div>
+    </div>
+    <nav class="tabs" id="navTabs">
+      <button data-tab="inicio" class="active"><span class="ico">&#9679;</span> Inicio</button>
+      <button data-tab="dashboard"><span class="ico">&#128202;</span> Dashboard</button>
+      <button data-tab="animales"><span class="ico">&#128052;</span> Animales</button>
+      <button data-tab="stock"><span class="ico">&#127838;</span> Alimentos y Despensa</button>
+      <button data-tab="ingresos"><span class="ico">&#128178;</span> Ingresos</button>
+      <button data-tab="gastos"><span class="ico">&#128176;</span> Gastos</button>
+      <button data-tab="vehiculos"><span class="ico">&#128663;</span> Vehículos y Bienes</button>
+      <button data-tab="sanidad"><span class="ico">&#128138;</span> Sanidad y Veterinarios</button>
+    </nav>
+    <div class="side-foot">
+      Sesión iniciada como <span id="userEmailLabel" class="mono" style="display:block;color:var(--wheat-light);margin:3px 0;"></span>
+      <button class="btn small ghost" style="margin-top:6px;color:var(--parchment);border-color:rgba(243,236,221,0.3);" onclick="hacerLogout()">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <div>
+        <div class="path" id="pathLabel">Panel</div>
+        <h1 id="pageTitle">Resumen del campo</h1>
+      </div>
+      <div class="iobtns">
+        <button class="btn primary" onclick="exportExcel()">&#128202; Exportar a Excel</button>
+        <button class="btn" onclick="exportData()">&#8681; Exportar respaldo</button>
+        <label class="btn" style="position:relative;overflow:hidden;">
+          &#8679; Importar respaldo
+          <input type="file" accept="application/json" onchange="importData(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+        </label>
+      </div>
+    </div>
+
+    <!-- ===================== INICIO ===================== -->
+    <section class="section active" id="tab-inicio">
+      <div class="card">
+        <h2>Campo "Tres Manantiales"</h2>
+        <div class="desc">Descripción general del establecimiento</div>
+        <div class="grid cols-4" id="dashStats"></div>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <h2>Extensión</h2>
+          <div class="desc">Superficie total del campo</div>
+          <div class="hectareas-edit">
+            <input type="number" id="hectareasInput" value="850" min="0">
+            <span>hectáreas</span>
+            <button class="btn small" onclick="guardarHectareas()">Guardar</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Propiedades e instalaciones</h2>
+          <div class="desc">Construcciones y galpones del establecimiento</div>
+          <ul class="prop-list" id="propList"></ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Alertas activas</h2>
+        <div class="desc">Faltantes de stock y medicamentos por debajo del mínimo</div>
+        <div id="alertBox"></div>
+      </div>
+    </section>
+
+    <!-- ===================== DASHBOARD ===================== -->
+    <section class="section" id="tab-dashboard">
+      <div class="dash-cards" id="dashCards"></div>
+      <div class="charts-row">
+        <div class="card chart-card">
+          <h2>Gastos acumulados por mes</h2>
+          <div class="desc">Total gastado, mes a mes</div>
+          <canvas id="chartGastosMes"></canvas>
+        </div>
+        <div class="card chart-card">
+          <h2>En qué se está gastando más</h2>
+          <div class="desc">Distribución por categoría</div>
+          <canvas id="chartGastosCategoria"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ANIMALES ===================== -->
+    <section class="section" id="tab-animales">
+      <div class="card">
+        <h2>Alta de animal</h2>
+        <div class="desc">Registrá un nuevo animal indicando tipo y edad</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Tipo</label>
+            <select id="anTipo">
+              <option>Vacas</option><option>Toros</option><option>Terneros</option>
+              <option>Caballos</option><option>Ovejas</option><option>Gallinas</option>
+              <option>Perros</option><option>Gatos</option><option>Cerdos</option><option>Otro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Identificación / Nombre</label>
+            <input id="anNombre" placeholder="Caravana, apodo...">
+          </div>
+          <div class="field">
+            <label>Edad (años)</label>
+            <input id="anEdad" type="number" min="0" step="0.5" placeholder="Ej: 2">
+          </div>
+          <div class="field">
+            <label>Sexo</label>
+            <select id="anSexo"><option>Hembra</option><option>Macho</option></select>
+          </div>
+          <div class="field">
+            <button class="btn primary" onclick="agregarAnimal()">+ Agregar animal</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Stock de animales</h2>
+        <div class="desc">Inventario por tipo — dar de baja cuando corresponda</div>
+        <div class="subtabs" id="animalFiltro"></div>
+        <div id="animalTablaWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===================== STOCK ===================== -->
+    <section class="section" id="tab-stock">
+      <div class="subtabs">
+        <button class="active" onclick="setStockTab('animal')" id="stockTabAnimal">Alimento para animales</button>
+        <button onclick="setStockTab('despensa')" id="stockTabDespensa">Despensa (casa)</button>
+      </div>
+
+      <div class="card">
+        <h2 id="stockFormTitle">Nuevo insumo — Alimento para animales</h2>
+        <div class="desc">Definí un mínimo para recibir alerta de faltante</div>
+        <div class="form-row">
+          <div class="field"><label>Insumo</label><input id="stItem" placeholder="Ej: Rollo de alfalfa"></div>
+          <div class="field"><label>Cantidad</label><input id="stCant" type="number" min="0" step="0.1"></div>
+          <div class="field"><label>Unidad</label><input id="stUnidad" placeholder="kg, bolsas, unid..."></div>
+          <div class="field"><label>Mínimo (alerta)</label><input id="stMin" type="number" min="0" step="0.1"></div>
+          <div class="field"><button class="btn primary" onclick="agregarStock()">+ Agregar insumo</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 id="stockListTitle">Stock disponible</h2>
+        <div id="stockTablaWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===================== INGRESOS ===================== -->
+    <section class="section" id="tab-ingresos">
+      <div class="card">
+        <h2>Registrar ingreso</h2>
+        <div class="desc">Ventas, arriendos y otros ingresos operativos del campo</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Categoría</label>
+            <select id="inCategoria">
+              <option>Venta de hacienda</option><option>Venta de lana / cuero</option>
+              <option>Arriendo de pastura</option><option>Venta de huevos / granja</option>
+              <option>Servicios prestados</option><option>Subsidios</option><option>Otro</option>
+            </select>
+          </div>
+          <div class="field"><label>Descripción</label><input id="inDesc" placeholder="Detalle del ingreso"></div>
+          <div class="field"><label>Monto ($)</label><input id="inMonto" type="number" min="0" step="0.01"></div>
+          <div class="field"><label>Fecha</label><input id="inFecha" type="date"></div>
+          <div class="field"><button class="btn primary" onclick="agregarIngreso()">+ Registrar</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Resumen de ingresos</h2>
+        <div class="grid cols-3" id="ingresoResumen" style="margin-bottom:16px;"></div>
+        <div id="ingresoTablaWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===================== GASTOS ===================== -->
+    <section class="section" id="tab-gastos">
+      <div class="card">
+        <h2>Registrar gasto</h2>
+        <div class="desc">Clasificá el gasto como fijo o variable</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Categoría</label>
+            <select id="gaCategoria">
+              <option>Víveres</option><option>Personal (Peón)</option><option>Impuestos</option>
+              <option>Combustible</option><option>Mantenimiento</option><option>Veterinario</option>
+              <option>Servicios contratados</option><option>Otro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo</label>
+            <select id="gaTipo"><option>Fijo</option><option>Variable</option></select>
+          </div>
+          <div class="field"><label>Descripción</label><input id="gaDesc" placeholder="Detalle del gasto"></div>
+          <div class="field"><label>Monto ($)</label><input id="gaMonto" type="number" min="0" step="0.01"></div>
+          <div class="field"><label>Fecha</label><input id="gaFecha" type="date"></div>
+          <div class="field"><button class="btn primary" onclick="agregarGasto()">+ Registrar</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Resumen de gastos</h2>
+        <div class="grid cols-3" id="gastoResumen" style="margin-bottom:16px;"></div>
+        <div id="gastoTablaWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===================== VEHICULOS ===================== -->
+    <section class="section" id="tab-vehiculos">
+      <div class="card">
+        <h2>Alta de vehículo o bien</h2>
+        <div class="desc">Incluye vehículos de trabajo y armamento legalizado del campo</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Tipo</label>
+            <select id="veTipo">
+              <option>Camioneta</option><option>Camión</option><option>Cuatriciclo</option>
+              <option>Moto</option><option>Tractor</option><option>Arma legalizada</option><option>Otro</option>
+            </select>
+          </div>
+          <div class="field"><label>Marca / Modelo</label><input id="veModelo" placeholder="Ej: Toyota Hilux"></div>
+          <div class="field"><label>Identificación</label><input id="vePatente" placeholder="Patente / Nº registro"></div>
+          <div class="field"><label>Estado</label><select id="veEstado"><option>Operativo</option><option>En reparación</option><option>Fuera de servicio</option></select></div>
+          <div class="field"><button class="btn primary" onclick="agregarVehiculo()">+ Agregar</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Inventario de vehículos y bienes</h2>
+        <div id="vehTablaWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===================== SANIDAD ===================== -->
+    <section class="section" id="tab-sanidad">
+      <div class="card">
+        <h2>Stock de medicamentos</h2>
+        <div class="desc">Sanidad animal — control de vencimientos y mínimos</div>
+        <div class="form-row">
+          <div class="field"><label>Medicamento</label><input id="meNombre" placeholder="Ej: Antiparasitario"></div>
+          <div class="field"><label>Cantidad</label><input id="meCant" type="number" min="0" step="0.1"></div>
+          <div class="field"><label>Mínimo (alerta)</label><input id="meMin" type="number" min="0" step="0.1"></div>
+          <div class="field"><label>Vencimiento</label><input id="meVenc" type="date"></div>
+          <div class="field"><button class="btn primary" onclick="agregarMedicamento()">+ Agregar</button></div>
+        </div>
+        <div id="medTablaWrap"></div>
+      </div>
+
+      <div class="card">
+        <h2>Veterinarios de referencia</h2>
+        <div class="desc">Contacto y ubicación — abre la dirección en Google Maps</div>
+        <div class="form-row">
+          <div class="field"><label>Nombre</label><input id="vetNombre" placeholder="Nombre del veterinario"></div>
+          <div class="field"><label>Teléfono</label><input id="vetTel" placeholder="Ej: 297 15 000000"></div>
+          <div class="field"><label>Dirección / Zona</label><input id="vetDir" placeholder="Dirección o localidad"></div>
+          <div class="field"><button class="btn primary" onclick="agregarVet()">+ Agregar</button></div>
+        </div>
+        <div id="vetListWrap"></div>
+      </div>
+    </section>
+
+    <footer class="note">Tres Manantiales · Sistema interno de administración de campo</footer>
+  </main>
+</div>
+
+<!-- ===================== MODAL: DETALLE + PDF ===================== -->
+<div class="modal-backdrop" id="detailModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="cerrarDetalle()">&times;</button>
+    <h2 id="detailTitle">Detalle</h2>
+    <div class="modal-sub" id="detailSub"></div>
+    <div class="detail-grid" id="detailGrid"></div>
+    <div class="pdf-box">
+      <div>
+        <div class="lbl2">Respaldo en PDF</div>
+        <div id="pdfCurrentLink" style="font-size:13px;margin-top:3px;"></div>
+      </div>
+      <label class="btn small primary" style="position:relative;overflow:hidden;">
+        &#8679; Subir PDF
+        <input type="file" accept="application/pdf" id="pdfFileInput" onchange="subirPdf(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: MANTENIMIENTO VEHÍCULO ===================== -->
+<div class="modal-backdrop" id="maintModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="cerrarMantenimiento()">&times;</button>
+    <h2 id="maintTitle">Mantenimiento</h2>
+    <div class="modal-sub">Kilometraje, service y consumo de combustible</div>
+    <div class="maint-grid">
+      <div class="field"><label>Número de interno</label><input id="maNumInterno"></div>
+      <div class="field"><label>Kilometraje actual</label><input id="maKm" type="number" min="0"></div>
+      <div class="field"><label>Último service</label><input id="maUltService" type="date"></div>
+      <div class="field"><label>Recorrido habitual</label><input id="maRecorrido" placeholder="Ej: Casco - Potrero norte"></div>
+    </div>
+    <button class="btn primary small" onclick="guardarMantenimiento()" style="margin-bottom:20px;">Guardar datos</button>
+
+    <h2 style="font-size:15px;">Cargas de combustible</h2>
+    <div class="form-row">
+      <div class="field"><label>Fecha</label><input id="cbFecha" type="date"></div>
+      <div class="field"><label>Litros</label><input id="cbLitros" type="number" min="0" step="0.1"></div>
+      <div class="field"><label>Km al cargar</label><input id="cbKm" type="number" min="0"></div>
+      <div class="field"><label>Costo ($)</label><input id="cbCosto" type="number" min="0" step="0.01"></div>
+      <div class="field"><button class="btn small primary" onclick="agregarCarga()">+ Agregar carga</button></div>
+    </div>
+    <div id="cargasTablaWrap"></div>
+  </div>
+</div>
+
+<!-- Supabase JS client (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- Gráficos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<!-- Exportación a Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Credenciales del proyecto (completar en js/config.js) -->
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<!-- Lógica de la aplicación -->
+<script src="js/app.js"></script>
+</body>
+</html>
