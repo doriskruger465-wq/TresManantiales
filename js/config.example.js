@@ -1,0 +1,8 @@
+// Copiá este archivo como js/config.js y completá con tus datos reales
+// de Supabase: Project Settings > API.
+//
+// La "anon public key" es segura para usar en el navegador SIEMPRE
+// que tengas Row Level Security activado (el schema.sql ya lo hace).
+
+window.SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+window.SUPABASE_ANON_KEY = "TU-ANON-KEY-PUBLICA";
